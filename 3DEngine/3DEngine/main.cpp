@@ -1,4 +1,5 @@
 #include <SFML/Graphics.hpp>
+#include <chrono>
 
 #include "GraphicsRenderer.h"
 #include "Math.h"
@@ -8,6 +9,9 @@ sf::RenderWindow window(sf::VideoMode(800, 800, 32u), "3D Engine");
 int main()
 {
 	// OnCreate
+	//std::chrono::high_resolution_clock::time_point start;
+	//std::chrono::high_resolution_clock::time_point end;
+
 	Mesh cubeMesh = 
 	// inicjalizer brakets
 	{
@@ -55,55 +59,107 @@ int main()
 	projectionMatrix.elementOf[2][3] = 1.f;
 	projectionMatrix.elementOf[3][3] = 0.f;
 
+	// Elapsed seckonds of privious frame
+	float fps;
+	float fLastFrameElapsedTime = 0;
+	float fTheta = 0.f;
+
 	// Updating Frames
 	while (window.isOpen())
 	{
+		sf::Clock clock;
+
+		// Event queue
 		sf::Event e;
 		while (window.pollEvent(e))
 		{
 			if (e.type == sf::Event::Closed) window.close();
 		}
 
+		// Clearing screen
 		window.clear(sf::Color::Black);
 
-		// Spin
-		Matrix4x4 matRotZ, matRotX;
+		// Spining angle
+		fTheta += 1.f * fLastFrameElapsedTime;
 
-		// Drawings
-		for (auto triangle : cubeMesh.triangles)
+		// Matrix rotation Z
+		Matrix4x4 matrixRotationZ;
+		matrixRotationZ.elementOf[0][0] = cosf(fTheta);
+		matrixRotationZ.elementOf[0][1] = sinf(fTheta);
+		matrixRotationZ.elementOf[1][0] = -sinf(fTheta);
+		matrixRotationZ.elementOf[1][1] = cosf(fTheta);
+		matrixRotationZ.elementOf[2][2] = 1;
+		matrixRotationZ.elementOf[3][3] = 1;
+
+		// Matrix rotation X
+		Matrix4x4 matrixRotationX;
+		matrixRotationX.elementOf[0][0] = 1;
+		matrixRotationX.elementOf[1][1] = cosf(fTheta * 0.5f);
+		matrixRotationX.elementOf[1][2] = sinf(fTheta * 0.5f);
+		matrixRotationX.elementOf[2][1] = -sinf(fTheta * 0.5f);
+		matrixRotationX.elementOf[2][2] = cosf(fTheta * 0.5f);
+		matrixRotationX.elementOf[3][3] = 1;
+
+		// Drawing mash
+		for (Triangle normalizedTriangle : cubeMesh.triangles)
 		{
-			Triangle projectedTriangle, translatedTriangle;
+			// Znormalizowany Trójk¹t -> Rotacja -> Przesuniêcie -> Rzutowanie -> Skalowanie
+			// Normalized Triangle -> Rotation -> Translation -> Projection -> Scaling
+			
+			// Rotation Z
+			Triangle triangleRotatedZ;
+			MultiplyMatrixVector(normalizedTriangle.points[0], triangleRotatedZ.points[0], matrixRotationZ);
+			MultiplyMatrixVector(normalizedTriangle.points[1], triangleRotatedZ.points[1], matrixRotationZ);
+			MultiplyMatrixVector(normalizedTriangle.points[2], triangleRotatedZ.points[2], matrixRotationZ);
 
-			translatedTriangle = triangle;
-			translatedTriangle.points[0].z = triangle.points[0].z + 3.0f;
-			translatedTriangle.points[1].z = triangle.points[1].z + 3.0f;
-			translatedTriangle.points[2].z = triangle.points[2].z + 3.0f;
+			// Rotation X
+			Triangle triangleRotatedZX;
+			MultiplyMatrixVector(triangleRotatedZ.points[0], triangleRotatedZX.points[0], matrixRotationX);
+			MultiplyMatrixVector(triangleRotatedZ.points[1], triangleRotatedZX.points[1], matrixRotationX);
+			MultiplyMatrixVector(triangleRotatedZ.points[2], triangleRotatedZX.points[2], matrixRotationX);
 
-			MultiplyMatrixVector(translatedTriangle.points[0], projectedTriangle.points[0], projectionMatrix);
-			MultiplyMatrixVector(translatedTriangle.points[1], projectedTriangle.points[1], projectionMatrix);
-			MultiplyMatrixVector(translatedTriangle.points[2], projectedTriangle.points[2], projectionMatrix);
+			// Translation Z -> Z + 3
+			Triangle triangleTranslated = triangleRotatedZX;
+			triangleTranslated.points[0].z = triangleRotatedZX.points[0].z + 3.0f;
+			triangleTranslated.points[1].z = triangleRotatedZX.points[1].z + 3.0f;
+			triangleTranslated.points[2].z = triangleRotatedZX.points[2].z + 3.0f;
 
-			// Scale into view
-			projectedTriangle.points[0].x += 1.f;	projectedTriangle.points[0].y += 1.f;
-			projectedTriangle.points[1].x += 1.f;	projectedTriangle.points[1].y += 1.f;
-			projectedTriangle.points[2].x += 1.f;	projectedTriangle.points[2].y += 1.f;
+			// Projection
+			Triangle triangleProjected;
+			MultiplyMatrixVector(triangleTranslated.points[0], triangleProjected.points[0], projectionMatrix);
+			MultiplyMatrixVector(triangleTranslated.points[1], triangleProjected.points[1], projectionMatrix);
+			MultiplyMatrixVector(triangleTranslated.points[2], triangleProjected.points[2], projectionMatrix);
 
-			projectedTriangle.points[0].x *= 0.5 * static_cast<float>(window.getSize().x);
-			projectedTriangle.points[0].y *= 0.5 * static_cast<float>(window.getSize().y);
-			projectedTriangle.points[1].x *= 0.5 * static_cast<float>(window.getSize().x);
-			projectedTriangle.points[1].y *= 0.5 * static_cast<float>(window.getSize().y);
-			projectedTriangle.points[2].x *= 0.5 * static_cast<float>(window.getSize().x);
-			projectedTriangle.points[2].y *= 0.5 * static_cast<float>(window.getSize().y);
+			// Scaling
+			Triangle scaledTriangle = triangleProjected;
+			scaledTriangle.points[0].x += 1.f;	scaledTriangle.points[0].y += 1.f;
+			scaledTriangle.points[1].x += 1.f;	scaledTriangle.points[1].y += 1.f;
+			scaledTriangle.points[2].x += 1.f;	scaledTriangle.points[2].y += 1.f;
 
+			scaledTriangle.points[0].x *= 0.5 * static_cast<float>(window.getSize().x);
+			scaledTriangle.points[0].y *= 0.5 * static_cast<float>(window.getSize().y);
+
+			scaledTriangle.points[1].x *= 0.5 * static_cast<float>(window.getSize().x);
+			scaledTriangle.points[1].y *= 0.5 * static_cast<float>(window.getSize().y);
+			
+			scaledTriangle.points[2].x *= 0.5 * static_cast<float>(window.getSize().x);
+			scaledTriangle.points[2].y *= 0.5 * static_cast<float>(window.getSize().y);
+
+			// Drawing
 			drawTriangle(
-				projectedTriangle.points[0].x, projectedTriangle.points[0].y,
-				projectedTriangle.points[1].x, projectedTriangle.points[1].y,
-				projectedTriangle.points[2].x, projectedTriangle.points[2].y,
+				scaledTriangle.points[0].x, scaledTriangle.points[0].y,
+				scaledTriangle.points[1].x, scaledTriangle.points[1].y,
+				scaledTriangle.points[2].x, scaledTriangle.points[2].y,
 				sf::Color::White
 			);
 		}
 
 		window.display();
+		
+		// FPS calculation and elapsed time
+		fLastFrameElapsedTime = clock.getElapsedTime().asSeconds();
+		float fps = 1.f / fLastFrameElapsedTime;
+		window.setTitle("3D Engine\tFPS - " + std::to_string(fps));
 	}
 
 	return 0;

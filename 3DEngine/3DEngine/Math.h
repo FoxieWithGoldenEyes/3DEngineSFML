@@ -22,4 +22,4 @@ struct Matrix4x4
 	float elementOf[4][4] = { 0 };
 };
 
-void MultiplyMatrixVector(Vec3d& i, Vec3d& o, Matrix4x4& m);
+void MultiplyMatrixVector(Vec3d& input, Vec3d& output, Matrix4x4& matrix);
