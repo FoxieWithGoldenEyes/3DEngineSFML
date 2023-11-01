@@ -84,21 +84,27 @@ int main()
 
 		// Matrix rotation Z
 		Matrix4x4 matrixRotationZ;
+		// Matrix neutral elements
+		matrixRotationZ.elementOf[2][2] = 1;
+		matrixRotationZ.elementOf[3][3] = 1;
+
+		// Matrix modifiers
 		matrixRotationZ.elementOf[0][0] = cosf(fTheta);
 		matrixRotationZ.elementOf[0][1] = sinf(fTheta);
 		matrixRotationZ.elementOf[1][0] = -sinf(fTheta);
 		matrixRotationZ.elementOf[1][1] = cosf(fTheta);
-		matrixRotationZ.elementOf[2][2] = 1;
-		matrixRotationZ.elementOf[3][3] = 1;
 
 		// Matrix rotation X
 		Matrix4x4 matrixRotationX;
+		// matrix neutral elements
 		matrixRotationX.elementOf[0][0] = 1;
+		matrixRotationX.elementOf[3][3] = 1;
+
+		// matrix modifiers
 		matrixRotationX.elementOf[1][1] = cosf(fTheta * 0.5f);
 		matrixRotationX.elementOf[1][2] = sinf(fTheta * 0.5f);
 		matrixRotationX.elementOf[2][1] = -sinf(fTheta * 0.5f);
 		matrixRotationX.elementOf[2][2] = cosf(fTheta * 0.5f);
-		matrixRotationX.elementOf[3][3] = 1;
 
 		// Drawing mash
 		for (Triangle normalizedTriangle : cubeMesh.triangles)
@@ -118,11 +124,11 @@ int main()
 			MultiplyMatrixVector(triangleRotatedZ.points[1], triangleRotatedZX.points[1], matrixRotationX);
 			MultiplyMatrixVector(triangleRotatedZ.points[2], triangleRotatedZX.points[2], matrixRotationX);
 
-			// Translation Z -> Z + 3
+			// Translation z -> z + 3
 			Triangle triangleTranslated = triangleRotatedZX;
-			triangleTranslated.points[0].z = triangleRotatedZX.points[0].z + 3.0f;
-			triangleTranslated.points[1].z = triangleRotatedZX.points[1].z + 3.0f;
-			triangleTranslated.points[2].z = triangleRotatedZX.points[2].z + 3.0f;
+			triangleTranslated.points[0].z = triangleRotatedZX.points[0].z + 3.f;
+			triangleTranslated.points[1].z = triangleRotatedZX.points[1].z + 3.f;
+			triangleTranslated.points[2].z = triangleRotatedZX.points[2].z + 3.f;
 
 			// Projection
 			Triangle triangleProjected;
@@ -133,8 +139,9 @@ int main()
 			//// Scaling
 			Triangle scaledTriangle = triangleProjected;
 			
-			// Offset point from negative -1 to 0 and from 0 to 1, anf from 1 to 2
-			// So thre are point from <-1,1> to <0, 2>
+			// Offset point from negative -1 to 0 and from 0 to 1, anf from 1 to 2 on x, y axis
+			// So thre are vertexies from <-1,1> to <0, 2> on x, y axis from now
+			// Translation?...
 			scaledTriangle.points[0].x += 1.f;	scaledTriangle.points[0].y += 1.f;
 			scaledTriangle.points[1].x += 1.f;	scaledTriangle.points[1].y += 1.f;
 			scaledTriangle.points[2].x += 1.f;	scaledTriangle.points[2].y += 1.f;
