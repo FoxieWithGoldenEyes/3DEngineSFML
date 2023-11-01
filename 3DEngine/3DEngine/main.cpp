@@ -130,12 +130,17 @@ int main()
 			MultiplyMatrixVector(triangleTranslated.points[1], triangleProjected.points[1], projectionMatrix);
 			MultiplyMatrixVector(triangleTranslated.points[2], triangleProjected.points[2], projectionMatrix);
 
-			// Scaling
+			//// Scaling
 			Triangle scaledTriangle = triangleProjected;
+			
+			// Offset point from negative -1 to 0 and from 0 to 1, anf from 1 to 2
+			// So thre are point from <-1,1> to <0, 2>
 			scaledTriangle.points[0].x += 1.f;	scaledTriangle.points[0].y += 1.f;
 			scaledTriangle.points[1].x += 1.f;	scaledTriangle.points[1].y += 1.f;
 			scaledTriangle.points[2].x += 1.f;	scaledTriangle.points[2].y += 1.f;
 
+			// Divide all point par 2, to have values between <0, 1>
+			// And then multiplay it by screen size
 			scaledTriangle.points[0].x *= 0.5 * static_cast<float>(window.getSize().x);
 			scaledTriangle.points[0].y *= 0.5 * static_cast<float>(window.getSize().y);
 
