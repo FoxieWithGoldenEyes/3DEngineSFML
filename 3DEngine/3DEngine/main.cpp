@@ -59,6 +59,9 @@ int main()
 	projectionMatrix.elementOf[2][3] = 1.f;
 	projectionMatrix.elementOf[3][3] = 0.f;
 
+	// Camera
+	Vec3d vCamera = { 0.f, 0.f, 0.f };
+
 	// Elapsed seckonds of privious frame
 	float fps;
 	float fLastFrameElapsedTime = 0;
@@ -147,17 +150,27 @@ int main()
 			normal.y = line1.z * line2.x - line1.x * line2.z;
 			normal.z = line1.x * line2.y - line1.y * line2.x;
 
-
 			// normilize normal to unit vector
 			// normalizacja vektora normalnej na wektor jednostkowy
-			float normalLenght = sqrtf(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
-			normal.x /= normalLenght;
-			normal.y /= normalLenght;
-			normal.z /= normalLenght;
+			float length = sqrtf(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
+			normal.x /= length;		normal.y /= length;		normal.z /= length;
 
-			// Do not draw unvisible sides of object (when normals is negative)
-			if (normal.z < 0)
+			// Calculating vector cordinates of perspective vector
+			Vec3d vPerspectiveVector_CameraObject;
+			vPerspectiveVector_CameraObject.x = triangleTranslated.points[0].x - vCamera.x;
+			vPerspectiveVector_CameraObject.y = triangleTranslated.points[0].y - vCamera.y;
+			vPerspectiveVector_CameraObject.z = triangleTranslated.points[0].z - vCamera.z;
+
+			// Calculating dot product of perspective vector and normal
+			float dotProductNormalAndPerspectiveVector = 
+				normal.x * vPerspectiveVector_CameraObject.x + 
+				normal.y * vPerspectiveVector_CameraObject.y + 
+				normal.z * vPerspectiveVector_CameraObject.z;
+
+			// Back-Face Culling
+			if(dotProductNormalAndPerspectiveVector < 0.f)
 			{
+
 				//// Projection (from 3D to 2D)
 				Triangle triangleProjected;
 				MultiplyMatrixVector(triangleTranslated.points[0], triangleProjected.points[0], projectionMatrix);
