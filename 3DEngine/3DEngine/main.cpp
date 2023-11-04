@@ -112,6 +112,7 @@ int main()
 			// Znormalizowany Trójk¹t -> Rotacja -> Przesuniêcie -> Rzutowanie -> Skalowanie
 			// Normalized Triangle -> Rotation -> Translation -> Projection -> Scaling
 			
+			//// Rotation
 			// Rotation Z
 			Triangle triangleRotatedZ;
 			MultiplyMatrixVector(normalizedTriangle.points[0], triangleRotatedZ.points[0], matrixRotationZ);
@@ -124,46 +125,74 @@ int main()
 			MultiplyMatrixVector(triangleRotatedZ.points[1], triangleRotatedZX.points[1], matrixRotationX);
 			MultiplyMatrixVector(triangleRotatedZ.points[2], triangleRotatedZX.points[2], matrixRotationX);
 
-			// Translation z -> z + 3
+			//// Translation z -> z + 3
 			Triangle triangleTranslated = triangleRotatedZX;
 			triangleTranslated.points[0].z = triangleRotatedZX.points[0].z + 3.f;
 			triangleTranslated.points[1].z = triangleRotatedZX.points[1].z + 3.f;
 			triangleTranslated.points[2].z = triangleRotatedZX.points[2].z + 3.f;
 
-			// Projection
-			Triangle triangleProjected;
-			MultiplyMatrixVector(triangleTranslated.points[0], triangleProjected.points[0], projectionMatrix);
-			MultiplyMatrixVector(triangleTranslated.points[1], triangleProjected.points[1], projectionMatrix);
-			MultiplyMatrixVector(triangleTranslated.points[2], triangleProjected.points[2], projectionMatrix);
+			//// Calculating normals
+			Vec3d normal, line1, line2;
+			line1.x = triangleTranslated.points[1].x - triangleTranslated.points[0].x;
+			line1.y = triangleTranslated.points[1].y - triangleTranslated.points[0].y;
+			line1.z = triangleTranslated.points[1].z - triangleTranslated.points[0].z;
 
-			//// Scaling
-			Triangle scaledTriangle = triangleProjected;
+			line2.x = triangleTranslated.points[2].x - triangleTranslated.points[0].x;
+			line2.y = triangleTranslated.points[2].y - triangleTranslated.points[0].y;
+			line2.z = triangleTranslated.points[2].z - triangleTranslated.points[0].z;
+
+			// Corss product of two lines
+			// iloczyn wektorowy dwóch linii jest normaln¹
+			normal.x = line1.y * line2.z - line1.z * line2.y;
+			normal.y = line1.z * line2.x - line1.x * line2.z;
+			normal.z = line1.x * line2.y - line1.y * line2.x;
+
+
+			// normilize normal to unit vector
+			// normalizacja vektora normalnej na wektor jednostkowy
+			float normalLenght = sqrtf(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
+			normal.x /= normalLenght;
+			normal.y /= normalLenght;
+			normal.z /= normalLenght;
+
+			// Do not draw unvisible sides of object (when normals is negative)
+			if (normal.z < 0)
+			{
+				//// Projection (from 3D to 2D)
+				Triangle triangleProjected;
+				MultiplyMatrixVector(triangleTranslated.points[0], triangleProjected.points[0], projectionMatrix);
+				MultiplyMatrixVector(triangleTranslated.points[1], triangleProjected.points[1], projectionMatrix);
+				MultiplyMatrixVector(triangleTranslated.points[2], triangleProjected.points[2], projectionMatrix);
+
+				//// Scaling
+				Triangle scaledTriangle = triangleProjected;
 			
-			// Offset point from negative -1 to 0 and from 0 to 1, anf from 1 to 2 on x, y axis
-			// So thre are vertexies from <-1,1> to <0, 2> on x, y axis from now
-			// Translation?...
-			scaledTriangle.points[0].x += 1.f;	scaledTriangle.points[0].y += 1.f;
-			scaledTriangle.points[1].x += 1.f;	scaledTriangle.points[1].y += 1.f;
-			scaledTriangle.points[2].x += 1.f;	scaledTriangle.points[2].y += 1.f;
+				// Offset point from negative -1 to 0 and from 0 to 1, anf from 1 to 2 on x, y axis
+				// So thre are vertexies from <-1,1> to <0, 2> on x, y axis from now
+				// Translation?...
+				scaledTriangle.points[0].x += 1.f;	scaledTriangle.points[0].y += 1.f;
+				scaledTriangle.points[1].x += 1.f;	scaledTriangle.points[1].y += 1.f;
+				scaledTriangle.points[2].x += 1.f;	scaledTriangle.points[2].y += 1.f;
 
-			// Divide all point par 2, to have values between <0, 1>
-			// And then multiplay it by screen size
-			scaledTriangle.points[0].x *= 0.5 * static_cast<float>(window.getSize().x);
-			scaledTriangle.points[0].y *= 0.5 * static_cast<float>(window.getSize().y);
+				// Divide all point par 2, to have values between <0, 1>
+				// And then multiplay it by screen size
+				scaledTriangle.points[0].x *= 0.5 * static_cast<float>(window.getSize().x);
+				scaledTriangle.points[0].y *= 0.5 * static_cast<float>(window.getSize().y);
 
-			scaledTriangle.points[1].x *= 0.5 * static_cast<float>(window.getSize().x);
-			scaledTriangle.points[1].y *= 0.5 * static_cast<float>(window.getSize().y);
+				scaledTriangle.points[1].x *= 0.5 * static_cast<float>(window.getSize().x);
+				scaledTriangle.points[1].y *= 0.5 * static_cast<float>(window.getSize().y);
 			
-			scaledTriangle.points[2].x *= 0.5 * static_cast<float>(window.getSize().x);
-			scaledTriangle.points[2].y *= 0.5 * static_cast<float>(window.getSize().y);
+				scaledTriangle.points[2].x *= 0.5 * static_cast<float>(window.getSize().x);
+				scaledTriangle.points[2].y *= 0.5 * static_cast<float>(window.getSize().y);
 
-			// Drawing
-			drawTriangle(
-				scaledTriangle.points[0].x, scaledTriangle.points[0].y,
-				scaledTriangle.points[1].x, scaledTriangle.points[1].y,
-				scaledTriangle.points[2].x, scaledTriangle.points[2].y,
-				sf::Color::White
-			);
+				// Drawing
+				drawTriangle(
+					scaledTriangle.points[0].x, scaledTriangle.points[0].y,
+					scaledTriangle.points[1].x, scaledTriangle.points[1].y,
+					scaledTriangle.points[2].x, scaledTriangle.points[2].y,
+					sf::Color::White
+				);
+			}
 		}
 
 		window.display();
