@@ -10,4 +10,6 @@ void drawFilledTriangle(float x1, float y1, float x2, float y2, float x3, float 
 
 void drawTriangle(float x1, float y1, float x2, float y2, float x3, float y3, sf::Color color);
 
+sf::Color GetColor(float lum);
+
 extern sf::RenderWindow window;

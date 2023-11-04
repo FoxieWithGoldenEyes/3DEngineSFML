@@ -80,7 +80,7 @@ int main()
 		}
 
 		// Clearing screen
-		window.clear(sf::Color::Black);
+		window.clear(sf::Color::White);
 
 		// Spining angle
 		fTheta += 1.f * fLastFrameElapsedTime;
@@ -170,6 +170,18 @@ int main()
 			// Back-Face Culling
 			if(dotProductNormalAndPerspectiveVector < 0.f)
 			{
+				//// Illumination
+				Vec3d vLightDirection = { 0.f, 0.f, -1.f };
+				float vLength = sqrtf(
+					vLightDirection.x * vLightDirection.x + 
+					vLightDirection.y * vLightDirection.y + 
+					vLightDirection.z * vLightDirection.z);
+
+				// normallizing vector
+				vLightDirection.x /= vLength;	vLightDirection.y /= vLength;	vLightDirection.z /= vLength;
+
+				// dot product
+				float dp = normal.x * vLightDirection.x + normal.y * vLightDirection.y + normal.z * vLightDirection.z;
 
 				//// Projection (from 3D to 2D)
 				Triangle triangleProjected;
@@ -197,6 +209,14 @@ int main()
 			
 				scaledTriangle.points[2].x *= 0.5 * static_cast<float>(window.getSize().x);
 				scaledTriangle.points[2].y *= 0.5 * static_cast<float>(window.getSize().y);
+
+				// Drawing
+				drawFilledTriangle(
+					scaledTriangle.points[0].x, scaledTriangle.points[0].y,
+					scaledTriangle.points[1].x, scaledTriangle.points[1].y,
+					scaledTriangle.points[2].x, scaledTriangle.points[2].y,
+					sf::Color::Black
+				);
 
 				// Drawing
 				drawTriangle(
