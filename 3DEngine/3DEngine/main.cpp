@@ -80,7 +80,7 @@ int main()
 		}
 
 		// Clearing screen
-		window.clear(sf::Color::White);
+		window.clear(sf::Color::Black);
 
 		// Spining angle
 		fTheta += 1.f * fLastFrameElapsedTime;
@@ -183,6 +183,9 @@ int main()
 				// dot product
 				float dp = normal.x * vLightDirection.x + normal.y * vLightDirection.y + normal.z * vLightDirection.z;
 
+				// get color depending of dot product
+				sf::Color color = GetColor(dp);
+
 				//// Projection (from 3D to 2D)
 				Triangle triangleProjected;
 				MultiplyMatrixVector(triangleTranslated.points[0], triangleProjected.points[0], projectionMatrix);
@@ -215,16 +218,16 @@ int main()
 					scaledTriangle.points[0].x, scaledTriangle.points[0].y,
 					scaledTriangle.points[1].x, scaledTriangle.points[1].y,
 					scaledTriangle.points[2].x, scaledTriangle.points[2].y,
-					sf::Color::Black
+					color
 				);
 
 				// Drawing
-				drawTriangle(
-					scaledTriangle.points[0].x, scaledTriangle.points[0].y,
-					scaledTriangle.points[1].x, scaledTriangle.points[1].y,
-					scaledTriangle.points[2].x, scaledTriangle.points[2].y,
-					sf::Color::White
-				);
+				//drawTriangle(
+				//	scaledTriangle.points[0].x, scaledTriangle.points[0].y,
+				//	scaledTriangle.points[1].x, scaledTriangle.points[1].y,
+				//	scaledTriangle.points[2].x, scaledTriangle.points[2].y,
+				//	sf::Color::White
+				//);
 			}
 		}
 
